@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AgendaPro</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f6f8;
+            color: #222;
+        }
+
+        /* LOGIN */
+
+        #loginScreen {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-box {
+            background: white;
+            width: 100%;
+            max-width: 420px;
+            padding: 35px;
+            border-radius: 18px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        }
+
+        .login-box h1 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .login-box p {
+            text-align: center;
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            font-size: 15px;
+            margin-bottom: 12px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #2563eb;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            background: #2563eb;
+            color: white;
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .secondary {
+            background: #e5e7eb;
+            color: #222;
+            margin-top: 10px;
+        }
+
+        .danger {
+            background: #dc2626;
+        }
+
+        #loginMessage {
+            margin-top: 15px;
+            text-align: center;
+            color: #dc2626;
+        }
+
+        /* APP */
+
+        #app {
+            display: none;
+        }
+
+        header {
+            background: white;
+            padding: 18px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+
+        header h1 {
+            font-size: 24px;
+        }
+
+        .logout {
+            width: auto;
+            padding: 10px 18px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 25px;
+        }
+
+        /* ESTATÍSTICAS */
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+        }
+
+        .stat h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .stat strong {
+            font-size: 25px;
+        }
+
+        /* FORMULÁRIO */
+
+        .form-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+        }
+
+        .form-card h2 {
+            margin-bottom: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .field label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        .field input {
+            margin-bottom: 0;
+        }
+
+        .create-button {
+            margin-top: 18px;
+        }
+
+        .format-hint {
+            display: block;
+            margin-top: 5px;
+            color: #777;
+            font-size: 12px;
+        }
+
+        /* AGENDAMENTOS */
+
+        .appointments {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+        }
+
+        .appointments h2 {
+            margin-bottom: 20px;
+        }
+
+        .appointment {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 17px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .appointment-info {
+            line-height: 1.7;
+        }
+
+        .appointment-info strong {
+            font-size: 17px;
+        }
+
+        .delete {
+            width: auto;
+            padding: 9px 13px;
+        }
+
+        .empty {
+            color: #777;
+            text-align: center;
+            padding: 25px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+        }
+
+        /* RESPONSIVO */
+
+        @media (max-width: 800px) {
+            .stats {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+
+            header {
+                padding: 15px;
+            }
+
+            header h1 {
+                font-size: 20px;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .appointment {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .delete {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- =====================================================
+     LOGIN
+===================================================== -->
+
+<section id="loginScreen">
+
+    <div class="login-box">
+
+        <h1>📅 AgendaPro</h1>
+
+        <p>Entre na sua conta para continuar</p>
+
+        <input
+            type="email"
+            id="email"
+            placeholder="📧 Seu e-mail"
+        >
+
+        <input
+            type="password"
+            id="password"
+            placeholder="🔒 Sua senha"
+        >
+
+        <button onclick="login()">
+            🔐 Entrar
+        </button>
+
+        <button
+            class="secondary"
+            onclick="signup()"
+        >
+            📝 Criar minha conta
+        </button>
+
+        <div id="loginMessage"></div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     APLICAÇÃO
+===================================================== -->
+
+<section id="app">
+
+    <header>
+
+        <h1>📅 AgendaPro</h1>
+
+        <button
+            class="logout danger"
+            onclick="logout()"
+        >
+            🚪 Sair
+        </button>
+
+    </header>
+
+
+    <main class="container">
+
+        <!-- ESTATÍSTICAS -->
+
+        <section class="stats">
+
+            <div class="stat">
+                <h3>💰 Faturamento</h3>
+                <strong id="totalRevenue">
+                    R$ 0,00
+                </strong>
+            </div>
+
+            <div class="stat">
+                <h3>📅 Agendamentos</h3>
+                <strong id="totalAppointments">
+                    0
+                </strong>
+            </div>
+
+            <div class="stat">
+                <h3>👥 Clientes</h3>
+                <strong id="totalClients">
+                    0
+                </strong>
+            </div>
+
+            <div class="stat">
+                <h3>🕐 Hoje</h3>
+                <strong id="todayAppointments">
+                    0
+                </strong>
+            </div>
+
+        </section>
+
+
+        <!-- NOVO AGENDAMENTO -->
+
+        <section class="form-card">
+
+            <h2>➕ Novo agendamento</h2>
+
+            <div class="form-grid">
+
+                <div class="field">
+
+                    <label>👤 Cliente</label>
+
+                    <input
+                        type="text"
+                        id="cliente"
+                        placeholder="Nome do cliente"
+                    >
+
+                </div>
+
+
+                <div class="field">
+
+                    <label>📱 Telefone</label>
+
+                    <input
+                        type="tel"
+                        id="telefone"
+                        placeholder="(13) 99999-9999"
+                    >
+
+                </div>
+
+
+                <div class="field">
+
+                    <label>✂️ Serviço</label>
+
+                    <input
+                        type="text"
+                        id="servico"
+                        placeholder="Ex.: Corte de cabelo"
+                    >
+
+                </div>
+
+
+                <div class="field">
+
+                    <label>💰 Preço</label>
+
+                    <input
+                        type="number"
+                        id="preco"
+                        placeholder="0,00"
+                        min="0"
+                        step="0.01"
+                    >
+
+                </div>
+
+
+                <!-- DATA BRASILEIRA -->
+
+                <div class="field">
+
+                    <label>📅 Data</label>
+
+                    <input
+                        type="text"
+                        id="data"
+                        placeholder="DD/MM/AAAA"
+                        maxlength="10"
+                        inputmode="numeric"
+                        autocomplete="off"
+                    >
+
+                    <span class="format-hint">
+                        Exemplo: 05/10/2026
+                    </span>
+
+                </div>
+
+
+                <!-- HORÁRIO BRASILEIRO -->
+
+                <div class="field">
+
+                    <label>🕐 Horário</label>
+
+                    <input
+                        type="text"
+                        id="horario"
+                        placeholder="HH:MM"
+                        maxlength="5"
+                        inputmode="numeric"
+                        autocomplete="off"
+                    >
+
+                    <span class="format-hint">
+                        Exemplo: 14:30
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <button
+                class="create-button"
+                onclick="criarAgendamento()"
+            >
+                ➕ Criar agendamento
+            </button>
+
+        </section>
+
+
+        <!-- AGENDAMENTOS -->
+
+        <section class="appointments">
+
+            <h2>📋 Próximos agendamentos</h2>
+
+            <div id="appointmentsList">
+
+                <div class="loading">
+                    Carregando agendamentos...
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</section>
+
+
+<script>
+
+/* =====================================================
+   SUPABASE
+===================================================== */
+
+const SUPABASE_URL =
+    "https://nygipsmllsifwmxrzwuq.supabase.co";
+
+const SUPABASE_KEY =
+    "sb_publishable_T5-oq85Wspm8GPTAlqUbGg_KpJNoEUa";
+
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
+
+
+/* =====================================================
+   ELEMENTOS
+===================================================== */
+
+const loginScreen =
+    document.getElementById("loginScreen");
+
+const app =
+    document.getElementById("app");
+
+const loginMessage =
+    document.getElementById("loginMessage");
+
+const appointmentsList =
+    document.getElementById("appointmentsList");
+
+
+/* =====================================================
+   INICIAR
+===================================================== */
+
+window.addEventListener("load", async () => {
+
+    const {
+        data: {
+            session
+        }
+    } = await supabaseClient.auth.getSession();
+
+    if (session) {
+
+        mostrarApp();
+
+    } else {
+
+        mostrarLogin();
+
+    }
+
+});
+
+
+/* =====================================================
+   MÁSCARA DE DATA
+   DD/MM/AAAA
+===================================================== */
+
+document.getElementById("data")
+    .addEventListener("input", function () {
+
+        let valor =
+            this.value.replace(/\D/g, "");
+
+        if (valor.length > 8) {
+            valor = valor.substring(0, 8);
+        }
+
+        if (valor.length >= 5) {
+
+            valor =
+                valor.substring(0, 2) +
+                "/" +
+                valor.substring(2, 4) +
+                "/" +
+                valor.substring(4);
+
+        } else if (valor.length >= 3) {
+
+            valor =
+                valor.substring(0, 2) +
+                "/" +
+                valor.substring(2);
+
+        }
+
+        this.value = valor;
+
+    });
+
+
+/* =====================================================
+   MÁSCARA DE HORÁRIO
+   HH:MM
+===================================================== */
+
+document.getElementById("horario")
+    .addEventListener("input", function () {
+
+        let valor =
+            this.value.replace(/\D/g, "");
+
+        if (valor.length > 4) {
+            valor = valor.substring(0, 4);
+        }
+
+        if (valor.length >= 3) {
+
+            valor =
+                valor.substring(0, 2) +
+                ":" +
+                valor.substring(2);
+
+        }
+
+        this.value = valor;
+
+    });
+
+
+/* =====================================================
+   LOGIN
+===================================================== */
+
+async function login() {
+
+    const email =
+        document.getElementById("email")
+            .value.trim();
+
+    const password =
+        document.getElementById("password")
+            .value;
+
+    loginMessage.textContent = "";
+
+    if (!email || !password) {
+
+        loginMessage.textContent =
+            "Preencha o e-mail e a senha.";
+
+        return;
+    }
+
+    loginMessage.textContent =
+        "Entrando...";
+
+
+    const {
+        error
+    } = await supabaseClient.auth
+        .signInWithPassword({
+
+            email: email,
+
+            password: password
+
+        });
+
+
+    if (error) {
+
+        loginMessage.textContent =
+            "Erro: " + error.message;
+
+        return;
+
+    }
+
+    mostrarApp();
+
+}
+
+
+/* =====================================================
+   CRIAR CONTA
+===================================================== */
+
+async function signup() {
+
+    const email =
+        document.getElementById("email")
+            .value.trim();
+
+    const password =
+        document.getElementById("password")
+            .value;
+
+    loginMessage.textContent = "";
+
+
+    if (!email || !password) {
+
+        loginMessage.textContent =
+            "Preencha o e-mail e a senha.";
+
+        return;
+    }
+
+
+    if (password.length < 6) {
+
+        loginMessage.textContent =
+            "A senha precisa ter pelo menos 6 caracteres.";
+
+        return;
+    }
+
+
+    loginMessage.textContent =
+        "Criando conta...";
+
+
+    const {
+        data,
+        error
+    } = await supabaseClient.auth
+        .signUp({
+
+            email: email,
+
+            password: password
+
+        });
+
+
+    if (error) {
+
+        loginMessage.textContent =
+            "Erro: " + error.message;
+
+        return;
+
+    }
+
+
+    if (data.session) {
+
+        mostrarApp();
+
+    } else {
+
+        loginMessage.textContent =
+            "Conta criada! Verifique seu e-mail para confirmar.";
+
+    }
+
+}
+
+
+/* =====================================================
+   SAIR
+===================================================== */
+
+async function logout() {
+
+    await supabaseClient.auth.signOut();
+
+    mostrarLogin();
+
+}
+
+
+/* =====================================================
+   MOSTRAR LOGIN
+===================================================== */
+
+function mostrarLogin() {
+
+    loginScreen.style.display = "flex";
+
+    app.style.display = "none";
+
+    document.getElementById("email").value = "";
+
+    document.getElementById("password").value = "";
+
+    loginMessage.textContent = "";
+
+}
+
+
+/* =====================================================
+   MOSTRAR APP
+===================================================== */
+
+async function mostrarApp() {
+
+    loginScreen.style.display = "none";
+
+    app.style.display = "block";
+
+    preencherDataAtual();
+
+    await carregarAgendamentos();
+
+}
+
+
+/* =====================================================
+   DATA ATUAL EM DD/MM/AAAA
+===================================================== */
+
+function preencherDataAtual() {
+
+    const hoje = new Date();
+
+    const dia =
+        String(hoje.getDate())
+            .padStart(2, "0");
+
+    const mes =
+        String(hoje.getMonth() + 1)
+            .padStart(2, "0");
+
+    const ano =
+        hoje.getFullYear();
+
+    document.getElementById("data").value =
+        `${dia}/${mes}/${ano}`;
+
+}
+
+
+/* =====================================================
+   CONVERTER DD/MM/AAAA
+   PARA AAAA-MM-DD
+===================================================== */
+
+function converterDataParaBanco(dataBR) {
+
+    const partes =
+        dataBR.split("/");
+
+    if (partes.length !== 3) {
+        return null;
+    }
+
+    const dia = partes[0];
+
+    const mes = partes[1];
+
+    const ano = partes[2];
+
+    return `${ano}-${mes}-${dia}`;
+
+}
+
+
+/* =====================================================
+   VALIDAR DATA
+===================================================== */
+
+function validarData(dataBR) {
+
+    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dataBR)) {
+        return false;
+    }
+
+    const partes =
+        dataBR.split("/");
+
+    const dia =
+        Number(partes[0]);
+
+    const mes =
+        Number(partes[1]);
+
+    const ano =
+        Number(partes[2]);
+
+
+    if (mes < 1 || mes > 12) {
+        return false;
+    }
+
+    if (dia < 1 || dia > 31) {
+        return false;
+    }
+
+    const data =
+        new Date(
+            ano,
+            mes - 1,
+            dia
+        );
+
+
+    return (
+        data.getFullYear() === ano &&
+        data.getMonth() === mes - 1 &&
+        data.getDate() === dia
+    );
+
+}
+
+
+/* =====================================================
+   VALIDAR HORÁRIO
+===================================================== */
+
+function validarHorario(horario) {
+
+    if (!/^\d{2}:\d{2}$/.test(horario)) {
+        return false;
+    }
+
+    const partes =
+        horario.split(":");
+
+    const hora =
+        Number(partes[0]);
+
+    const minuto =
+        Number(partes[1]);
+
+
+    return (
+        hora >= 0 &&
+        hora <= 23 &&
+        minuto >= 0 &&
+        minuto <= 59
+    );
+
+}
+
+
+/* =====================================================
+   CRIAR AGENDAMENTO
+===================================================== */
+
+async function criarAgendamento() {
+
+    const {
+        data: {
+            user
+        }
+    } = await supabaseClient.auth.getUser();
+
+
+    if (!user) {
+
+        alert("Você precisa estar logado.");
+
+        mostrarLogin();
+
+        return;
+
+    }
+
+
+    const cliente =
+        document.getElementById("cliente")
+            .value.trim();
+
+    const telefone =
+        document.getElementById("telefone")
+            .value.trim();
+
+    const servico =
+        document.getElementById("servico")
+            .value.trim();
+
+    const dataBR =
+        document.getElementById("data")
+            .value.trim();
+
+    const horario =
+        document.getElementById("horario")
+            .value.trim();
+
+    const preco =
+        parseFloat(
+            document.getElementById("preco")
+                .value
+        ) || 0;
+
+
+    if (!cliente ||
+        !servico ||
+        !dataBR ||
+        !horario) {
+
+        alert(
+            "Preencha cliente, serviço, data e horário."
+        );
+
+        return;
+    }
+
+
+    if (!validarData(dataBR)) {
+
+        alert(
+            "Digite uma data válida no formato DD/MM/AAAA."
+        );
+
+        return;
+    }
+
+
+    if (!validarHorario(horario)) {
+
+        alert(
+            "Digite um horário válido no formato HH:MM."
+        );
+
+        return;
+    }
+
+
+    const dataBanco =
+        converterDataParaBanco(dataBR);
+
+
+    const {
+        error
+    } = await supabaseClient
+        .from("agendamentos")
+        .insert({
+
+            user_id: user.id,
+
+            cliente: cliente,
+
+            telefone: telefone,
+
+            servico: servico,
+
+            data: dataBanco,
+
+            horario: horario,
+
+            preco: preco
+
+        });
+
+
+    if (error) {
+
+        console.error(error);
+
+        alert(
+            "Erro ao criar agendamento: " +
+            error.message
+        );
+
+        return;
+    }
+
+
+    document.getElementById("cliente").value = "";
+
+    document.getElementById("telefone").value = "";
+
+    document.getElementById("servico").value = "";
+
+    document.getElementById("preco").value = "";
+
+    document.getElementById("horario").value = "";
+
+
+    await carregarAgendamentos();
+
+}
+
+
+/* =====================================================
+   CARREGAR AGENDAMENTOS
+===================================================== */
+
+async function carregarAgendamentos() {
+
+    appointmentsList.innerHTML =
+        '<div class="loading">Carregando...</div>';
+
+
+    const {
+        data: {
+            user
+        }
+    } = await supabaseClient.auth.getUser();
+
+
+    if (!user) {
+
+        mostrarLogin();
+
+        return;
+    }
+
+
+    const {
+        data,
+        error
+    } = await supabaseClient
+        .from("agendamentos")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("data", {
+            ascending: true
+        })
+        .order("horario", {
+            ascending: true
+        });
+
+
+    if (error) {
+
+        console.error(error);
+
+        appointmentsList.innerHTML =
+            `<div class="empty">
+                Erro ao carregar agendamentos.
+            </div>`;
+
+        return;
+    }
+
+
+    atualizarEstatisticas(data);
+
+    renderizarAgendamentos(data);
+
+}
+
+
+/* =====================================================
+   MOSTRAR AGENDAMENTOS
+===================================================== */
+
+function renderizarAgendamentos(agendamentos) {
+
+    if (!agendamentos ||
+        agendamentos.length === 0) {
+
+        appointmentsList.innerHTML =
+            `<div class="empty">
+                📭 Nenhum agendamento encontrado.
+            </div>`;
+
+        return;
+    }
+
+
+    appointmentsList.innerHTML = "";
+
+
+    agendamentos.forEach(agendamento => {
+
+        const div =
+            document.createElement("div");
+
+        div.className =
+            "appointment";
+
+
+        const dataFormatada =
+            formatarDataBR(
+                agendamento.data
+            );
+
+
+        const precoFormatado =
+            formatarPreco(
+                agendamento.preco
+            );
+
+
+        div.innerHTML = `
+
+            <div class="appointment-info">
+
+                <strong>
+                    👤 ${escapeHTML(
+                        agendamento.cliente
+                    )}
+                </strong>
+
+                <br>
+
+                📱 ${escapeHTML(
+                    agendamento.telefone ||
+                    "Sem telefone"
+                )}
+
+                <br>
+
+                ✂️ ${escapeHTML(
+                    agendamento.servico
+                )}
+
+                <br>
+
+                📅 ${dataFormatada}
+
+                &nbsp;&nbsp;
+
+                🕐 ${agendamento.horario.slice(0,5)}
+
+                <br>
+
+                💰 ${precoFormatado}
+
+            </div>
+
+            <button
+                class="delete danger"
+                onclick="excluirAgendamento(${agendamento.id})"
+            >
+                🗑️ Excluir
+            </button>
+
+        `;
+
+
+        appointmentsList.appendChild(div);
+
+    });
+
+}
+
+
+/* =====================================================
+   EXCLUIR
+===================================================== */
+
+async function excluirAgendamento(id) {
+
+    const confirmar =
+        confirm(
+            "Tem certeza que deseja excluir este agendamento?"
+        );
+
+
+    if (!confirmar) {
+        return;
+    }
+
+
+    const {
+        error
+    } = await supabaseClient
+        .from("agendamentos")
+        .delete()
+        .eq("id", id);
+
+
+    if (error) {
+
+        alert(
+            "Erro ao excluir: " +
+            error.message
+        );
+
+        return;
+    }
+
+
+    await carregarAgendamentos();
+
+}
+
+
+/* =====================================================
+   ESTATÍSTICAS
+===================================================== */
+
+function atualizarEstatisticas(agendamentos) {
+
+    const total =
+        agendamentos.length;
+
+
+    const faturamento =
+        agendamentos.reduce(
+            (total, item) =>
+                total +
+                Number(item.preco || 0),
+            0
+        );
+
+
+    const clientes =
+        new Set(
+            agendamentos.map(
+                item => item.cliente
+            )
+        ).size;
+
+
+    const hoje =
+        new Date();
+
+
+    const dia =
+        String(hoje.getDate())
+            .padStart(2, "0");
+
+
+    const mes =
+        String(hoje.getMonth() + 1)
+            .padStart(2, "0");
+
+
+    const ano =
+        hoje.getFullYear();
+
+
+    const hojeBanco =
+        `${ano}-${mes}-${dia}`;
+
+
+    const agendamentosHoje =
+        agendamentos.filter(
+            item =>
+                item.data === hojeBanco
+        ).length;
+
+
+    document.getElementById(
+        "totalAppointments"
+    ).textContent = total;
+
+
+    document.getElementById(
+        "totalRevenue"
+    ).textContent =
+        formatarPreco(faturamento);
+
+
+    document.getElementById(
+        "totalClients"
+    ).textContent = clientes;
+
+
+    document.getElementById(
+        "todayAppointments"
+    ).textContent =
+        agendamentosHoje;
+
+}
+
+
+/* =====================================================
+   FORMATAR DATA PARA BRASIL
+===================================================== */
+
+function formatarDataBR(data) {
+
+    if (!data) {
+        return "";
+    }
+
+
+    const partes =
+        data.split("-");
+
+
+    if (partes.length !== 3) {
+        return data;
+    }
+
+
+    return (
+        partes[2] +
+        "/" +
+        partes[1] +
+        "/" +
+        partes[0]
+    );
+
+}
+
+
+/* =====================================================
+   PREÇO
+===================================================== */
+
+function formatarPreco(valor) {
+
+    return Number(valor || 0)
+        .toLocaleString(
+            "pt-BR",
+            {
+                style: "currency",
+                currency: "BRL"
+            }
+        );
+
+}
+
+
+/* =====================================================
+   SEGURANÇA
+===================================================== */
+
+function escapeHTML(texto) {
+
+    const div =
+        document.createElement("div");
+
+    div.textContent =
+        texto ?? "";
+
+    return div.innerHTML;
+
+}
+
+
+/* =====================================================
+   ALTERAÇÕES DE LOGIN
+===================================================== */
+
+supabaseClient.auth.onAuthStateChange(
+    (event, session) => {
+
+        if (session) {
+
+            mostrarApp();
+
+        } else {
+
+            mostrarLogin();
+
+        }
+
+    }
+);
+
+</script>
+
+</body>
+</html>
