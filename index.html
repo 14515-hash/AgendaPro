@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>AgendaPro</title>
@@ -9,6 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -216,6 +220,7 @@
             justify-content: space-between;
             align-items: center;
             gap: 15px;
+            transition: 0.2s;
         }
 
         .appointment-info {
@@ -229,6 +234,43 @@
         .delete {
             width: auto;
             padding: 9px 13px;
+        }
+
+        /* CONCLUÍDO */
+
+        .complete {
+            width: auto;
+            padding: 9px 13px;
+            background: #16a34a;
+        }
+
+        .completed {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+            opacity: 0.8;
+        }
+
+        .completed .appointment-info {
+            text-decoration: line-through;
+        }
+
+        .completed-badge {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: #dcfce7;
+            color: #166534;
+            font-size: 12px;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .appointment-actions {
+            display: flex;
+            gap: 8px;
+            flex-direction: column;
+            min-width: 120px;
         }
 
         .empty {
@@ -246,9 +288,11 @@
         /* RESPONSIVO */
 
         @media (max-width: 800px) {
+
             .stats {
                 grid-template-columns: 1fr 1fr;
             }
+
         }
 
         @media (max-width: 600px) {
@@ -278,11 +322,19 @@
                 align-items: stretch;
             }
 
+            .appointment-actions {
+                width: 100%;
+            }
+
+            .complete,
             .delete {
                 width: 100%;
             }
+
         }
+
     </style>
+
 </head>
 
 <body>
@@ -356,31 +408,46 @@
         <section class="stats">
 
             <div class="stat">
+
                 <h3>💰 Faturamento</h3>
+
                 <strong id="totalRevenue">
                     R$ 0,00
                 </strong>
+
             </div>
 
+
             <div class="stat">
+
                 <h3>📅 Agendamentos</h3>
+
                 <strong id="totalAppointments">
                     0
                 </strong>
+
             </div>
 
+
             <div class="stat">
+
                 <h3>👥 Clientes</h3>
+
                 <strong id="totalClients">
                     0
                 </strong>
+
             </div>
 
+
             <div class="stat">
+
                 <h3>🕐 Hoje</h3>
+
                 <strong id="todayAppointments">
                     0
                 </strong>
+
             </div>
 
         </section>
@@ -448,7 +515,7 @@
                 </div>
 
 
-                <!-- DATA BRASILEIRA -->
+                <!-- DATA -->
 
                 <div class="field">
 
@@ -470,7 +537,7 @@
                 </div>
 
 
-                <!-- HORÁRIO BRASILEIRO -->
+                <!-- HORÁRIO -->
 
                 <div class="field">
 
@@ -574,13 +641,9 @@ window.addEventListener("load", async () => {
     } = await supabaseClient.auth.getSession();
 
     if (session) {
-
         mostrarApp();
-
     } else {
-
         mostrarLogin();
-
     }
 
 });
@@ -588,7 +651,6 @@ window.addEventListener("load", async () => {
 
 /* =====================================================
    MÁSCARA DE DATA
-   DD/MM/AAAA
 ===================================================== */
 
 document.getElementById("data")
@@ -626,7 +688,6 @@ document.getElementById("data")
 
 /* =====================================================
    MÁSCARA DE HORÁRIO
-   HH:MM
 ===================================================== */
 
 document.getElementById("horario")
@@ -687,7 +748,6 @@ async function login() {
         .signInWithPassword({
 
             email: email,
-
             password: password
 
         });
@@ -699,7 +759,6 @@ async function login() {
             "Erro: " + error.message;
 
         return;
-
     }
 
     mostrarApp();
@@ -753,7 +812,6 @@ async function signup() {
         .signUp({
 
             email: email,
-
             password: password
 
         });
@@ -765,7 +823,6 @@ async function signup() {
             "Erro: " + error.message;
 
         return;
-
     }
 
 
@@ -833,7 +890,7 @@ async function mostrarApp() {
 
 
 /* =====================================================
-   DATA ATUAL EM DD/MM/AAAA
+   DATA ATUAL
 ===================================================== */
 
 function preencherDataAtual() {
@@ -858,8 +915,7 @@ function preencherDataAtual() {
 
 
 /* =====================================================
-   CONVERTER DD/MM/AAAA
-   PARA AAAA-MM-DD
+   CONVERTER DATA
 ===================================================== */
 
 function converterDataParaBanco(dataBR) {
@@ -912,6 +968,7 @@ function validarData(dataBR) {
     if (dia < 1 || dia > 31) {
         return false;
     }
+
 
     const data =
         new Date(
@@ -980,7 +1037,6 @@ async function criarAgendamento() {
         mostrarLogin();
 
         return;
-
     }
 
 
@@ -1011,10 +1067,12 @@ async function criarAgendamento() {
         ) || 0;
 
 
-    if (!cliente ||
+    if (
+        !cliente ||
         !servico ||
         !dataBR ||
-        !horario) {
+        !horario
+    ) {
 
         alert(
             "Preencha cliente, serviço, data e horário."
@@ -1066,7 +1124,9 @@ async function criarAgendamento() {
 
             horario: horario,
 
-            preco: preco
+            preco: preco,
+
+            concluido: false
 
         });
 
@@ -1132,9 +1192,18 @@ async function carregarAgendamentos() {
         .from("agendamentos")
         .select("*")
         .eq("user_id", user.id)
+
+        /* PENDENTES PRIMEIRO */
+        .order("concluido", {
+            ascending: true
+        })
+
+        /* DATA */
         .order("data", {
             ascending: true
         })
+
+        /* HORÁRIO */
         .order("horario", {
             ascending: true
         });
@@ -1166,8 +1235,10 @@ async function carregarAgendamentos() {
 
 function renderizarAgendamentos(agendamentos) {
 
-    if (!agendamentos ||
-        agendamentos.length === 0) {
+    if (
+        !agendamentos ||
+        agendamentos.length === 0
+    ) {
 
         appointmentsList.innerHTML =
             `<div class="empty">
@@ -1186,8 +1257,18 @@ function renderizarAgendamentos(agendamentos) {
         const div =
             document.createElement("div");
 
+
         div.className =
             "appointment";
+
+
+        /* SE CONCLUÍDO */
+
+        if (agendamento.concluido) {
+
+            div.classList.add("completed");
+
+        }
 
 
         const dataFormatada =
@@ -1237,14 +1318,64 @@ function renderizarAgendamentos(agendamentos) {
 
                 💰 ${precoFormatado}
 
+                ${
+                    agendamento.concluido
+                    ? `
+                        <div class="completed-badge">
+                            ✅ CONCLUÍDO
+                        </div>
+                    `
+                    : ""
+                }
+
             </div>
 
-            <button
-                class="delete danger"
-                onclick="excluirAgendamento(${agendamento.id})"
-            >
-                🗑️ Excluir
-            </button>
+
+            <div class="appointment-actions">
+
+                ${
+                    agendamento.concluido
+
+                    ? `
+
+                        <button
+                            class="complete"
+                            onclick="marcarComoConcluido(
+                                ${agendamento.id},
+                                false
+                            )"
+                        >
+                            ↩️ Reabrir
+                        </button>
+
+                    `
+
+                    : `
+
+                        <button
+                            class="complete"
+                            onclick="marcarComoConcluido(
+                                ${agendamento.id},
+                                true
+                            )"
+                        >
+                            ✅ Concluir
+                        </button>
+
+                    `
+                }
+
+
+                <button
+                    class="delete danger"
+                    onclick="excluirAgendamento(
+                        ${agendamento.id}
+                    )"
+                >
+                    🗑️ Excluir
+                </button>
+
+            </div>
 
         `;
 
@@ -1252,6 +1383,45 @@ function renderizarAgendamentos(agendamentos) {
         appointmentsList.appendChild(div);
 
     });
+
+}
+
+
+/* =====================================================
+   CONCLUIR / REABRIR AGENDAMENTO
+===================================================== */
+
+async function marcarComoConcluido(
+    id,
+    concluido
+) {
+
+    const {
+        error
+    } = await supabaseClient
+        .from("agendamentos")
+        .update({
+
+            concluido: concluido
+
+        })
+        .eq("id", id);
+
+
+    if (error) {
+
+        console.error(error);
+
+        alert(
+            "Erro ao atualizar agendamento: " +
+            error.message
+        );
+
+        return;
+    }
+
+
+    await carregarAgendamentos();
 
 }
 
@@ -1309,18 +1479,24 @@ function atualizarEstatisticas(agendamentos) {
 
     const faturamento =
         agendamentos.reduce(
+
             (total, item) =>
+
                 total +
                 Number(item.preco || 0),
+
             0
+
         );
 
 
     const clientes =
         new Set(
+
             agendamentos.map(
                 item => item.cliente
             )
+
         ).size;
 
 
@@ -1348,14 +1524,17 @@ function atualizarEstatisticas(agendamentos) {
 
     const agendamentosHoje =
         agendamentos.filter(
+
             item =>
                 item.data === hojeBanco
+
         ).length;
 
 
     document.getElementById(
         "totalAppointments"
-    ).textContent = total;
+    ).textContent =
+        total;
 
 
     document.getElementById(
@@ -1366,7 +1545,8 @@ function atualizarEstatisticas(agendamentos) {
 
     document.getElementById(
         "totalClients"
-    ).textContent = clientes;
+    ).textContent =
+        clientes;
 
 
     document.getElementById(
@@ -1378,7 +1558,7 @@ function atualizarEstatisticas(agendamentos) {
 
 
 /* =====================================================
-   FORMATAR DATA PARA BRASIL
+   FORMATAR DATA
 ===================================================== */
 
 function formatarDataBR(data) {
@@ -1416,11 +1596,14 @@ function formatarPreco(valor) {
 
     return Number(valor || 0)
         .toLocaleString(
+
             "pt-BR",
+
             {
                 style: "currency",
                 currency: "BRL"
             }
+
         );
 
 }
@@ -1448,6 +1631,7 @@ function escapeHTML(texto) {
 ===================================================== */
 
 supabaseClient.auth.onAuthStateChange(
+
     (event, session) => {
 
         if (session) {
@@ -1461,9 +1645,11 @@ supabaseClient.auth.onAuthStateChange(
         }
 
     }
+
 );
 
 </script>
 
 </body>
+
 </html>
